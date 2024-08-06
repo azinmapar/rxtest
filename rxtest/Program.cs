@@ -1,3 +1,17 @@
+
+
+using System.Reactive.Linq;
+
+
+IObservable<long> ticks = Observable.Timer(
+    dueTime: TimeSpan.Zero,
+    period: TimeSpan.FromSeconds(1));
+
+ticks.Subscribe(
+    ticks => Console.WriteLine($"ticks: {ticks}"));
+
+Console.ReadLine();
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
