@@ -13,6 +13,15 @@ namespace rxtest.Rx
             TimeSpan minimumInactivityPeriod,
             IScheduler scheduler)
         {
+
+            // The basic approach here is that every time source produces a value,
+            // we actually create a brand new IObservable<int>, which produces exactly two values.
+            // It immediately produces the value 1,
+            // and then after the specified timespan (2 seconds in these examples) it produces the value -1.
+
+            //  IScheduler is an Rx abstraction for dealing with timing and concurrency.
+            //  We need it because we need to be able to generate events after a one second delay,
+            //  and that sort of time-driven activity requires a scheduler
             IObservable<int> onoffs =
                 from _ in src
                 from delta in
