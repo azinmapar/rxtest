@@ -1,8 +1,9 @@
-﻿using System.Reactive.Linq;
+﻿using rxtest.Models;
+using System.Reactive.Linq;
 
 namespace rxtest.Rx
 {
-    public class RxExamples
+    static public class RxExamples
     {
 
         public static void RxTicker()
@@ -35,6 +36,38 @@ namespace rxtest.Rx
                 {
                     Console.WriteLine("Time's up!");
                 });
+        }
+
+        public static void RxCatFact()
+        {
+            CatFactQuery catFactQuery = new CatFactQuery();
+
+            Observable
+                .FromAsync(() => catFactQuery.Execute())
+                .ValidateCatFactLength(70)
+                .Retry(3)
+                .Catch(Observable.Return(new CatFact() { Content = "CatFact CatFact" }))
+                .Subscribe((catfact) =>
+                {
+                    Console.WriteLine(catfact.Content);
+                });
+           
+        }
+
+        public static IObservable<CatFact> ValidateCatFactLength(this IObservable<CatFact> observable, int maxLength)
+        {
+            return observable.Select(catfact =>
+             {
+                 if (catfact.Content.Length > maxLength)
+                 {
+                     return Observable.Throw<CatFact>(new Exception("CatFact was too long"));
+                 }
+
+                 return Observable.Return(catfact);
+
+
+             })
+                .Switch();
         }
 
     }

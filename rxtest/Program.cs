@@ -5,7 +5,9 @@ using System.Reactive.Linq;
 
 //RxExamples.RxTicker();
 
-RxExamples.RxCountdown(5);
+//RxExamples.RxCountdown(5);
+
+RxExamples.RxCatFact();
 
 // our app doesn't stop until we press enter
 Console.ReadLine();
