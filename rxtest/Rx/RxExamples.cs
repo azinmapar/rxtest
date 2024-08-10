@@ -17,5 +17,25 @@ namespace rxtest.Rx
                 ticks => Console.WriteLine($"ticks: {ticks}"));
         }
 
+        public static void RxCountdown(int seconds)
+        {
+            Observable
+                // every second
+                .Timer(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(1))
+                // showing the countdown
+                .Select(currentSeconds => seconds - currentSeconds)
+                // count until 0
+                .TakeWhile(currentSecond => currentSecond > 0)
+                // print coumtdown
+                .Subscribe((currentSeconds) =>
+                {
+                    Console.WriteLine(currentSeconds);
+                }, () =>
+                // when countdown finished
+                {
+                    Console.WriteLine("Time's up!");
+                });
+        }
+
     }
 }
