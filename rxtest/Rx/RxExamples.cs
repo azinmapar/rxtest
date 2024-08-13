@@ -1,4 +1,5 @@
 ﻿using rxtest.Models;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace rxtest.Rx
@@ -27,7 +28,7 @@ namespace rxtest.Rx
                 .Select(currentSeconds => seconds - currentSeconds)
                 // count until 0
                 .TakeWhile(currentSecond => currentSecond > 0)
-                // print coumtdown
+                // print countdown
                 .Subscribe((currentSeconds) =>
                 {
                     Console.WriteLine(currentSeconds);
@@ -70,5 +71,105 @@ namespace rxtest.Rx
                 .Switch();
         }
 
+        public static void RxPrintOne()
+        {
+            var o = Observable.Create<int>(o =>
+            {
+                o.OnNext(1);
+                o.OnCompleted();
+                return Disposable.Create(() => Console.WriteLine("Disposed"));
+            }
+            
+            );
+
+            o.Subscribe(
+                next => Console.WriteLine(next),
+                error => Console.WriteLine(error),
+                () => Console.WriteLine("Finished")
+                );
+        }
+
+        public static void RxRangeCounter()
+        {
+            var throwsAtTwo = Observable.Range(0, 4)
+                .Select(i =>
+                {
+                    if (i == 2)
+                        throw new Exception("i is 2");
+                    return i;
+                });
+                
+                Func<Exception, IObservable<int>> errorHandler = ex =>
+                {
+                    Console.WriteLine("Exception: " + ex.Message);
+
+                    if (ex is NullReferenceException)
+                        return Observable.Range(9, 2);
+                    else
+                        throw ex;
+                };
+
+            throwsAtTwo
+                .Catch(errorHandler)
+                .Retry(2)
+                .Subscribe(Console.WriteLine);
+        } 
+
+        public static async void RxRangeCounter2()
+        {
+            var throwsAtTwo = Observable.Range(0, 4)
+                .Select(i =>
+                {
+                    if (i == 2)
+                        throw new Exception("i is 2");
+                    return i;
+                });
+
+            Func<Exception, IObservable<int>> errorHandler = ex =>
+            {
+                Console.WriteLine("Exception: " + ex.Message);
+
+                if (ex is NullReferenceException)
+                    return Observable.Range(9, 2);
+                else
+                    throw ex;
+            };
+
+            var signal = Observable.Timer(DateTimeOffset.Now.AddSeconds(1));
+
+            //RetryWhen does exactly what retry does except that we need a trigger observable
+            //that is signaling when to retry again
+            // Retrywhen catches the exception and waits until the signal emits any value
+
+            throwsAtTwo
+                .RetryWhen(_ => signal)
+                .Subscribe(Console.WriteLine);
+
+            await Task.Delay(1000);
+        }
+
+        public static async void RxHotObservable()
+        {
+
+            // used for when we have an external source emitting events
+            var source = Observable.Timer(DateTimeOffset.Now, TimeSpan.FromSeconds(1)).Replay(3);
+
+            // after replay we should use connect for the observer that is the result of replay be initialized
+
+            source.Connect();
+
+            await Task.Delay(8000); 
+
+            // connect already starts the subscription and observers can lose notifications until they subscribe
+
+            var observer1 = source.Subscribe(Console.WriteLine);
+
+            var observer2 = source.Subscribe(Console.WriteLine);
+
+        }
+
+         
     }
+
+
 }
